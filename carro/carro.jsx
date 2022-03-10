@@ -2,12 +2,13 @@ import React from 'react';
 import './carro.css';
 import { Container, Row, Col, Button } from 'reactstrap';
 import * as request from 'superagent';
+import { Redirect } from 'react-router-dom';
 
 class Carro extends React.Component{
     constructor(props){
         super(props)
         this.state = {
-            anos: ['2010', '2011', '2012', '2013', '2014', '2015', '2016', '2017', '2018', '2019', '2020', '2021'],
+            anos: ['2010', '2011', '2012', '2013', '2014', '2015', '2016', '2017', '2018', '2019', '2020', '2021', '2022', '2023', '2024', '2025', '2026', '2027', '2028', '2029', '2030'],
             meses: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'],
             num: 0,
             funcion: <div class="spinner-border text-success" role="status" style={{display: 'block', margin: '0 auto', marginTop: '40px'}}>
@@ -16,11 +17,15 @@ class Carro extends React.Component{
             funcion2: <div class="spinner-border text-success" role="status" style={{display: 'block', margin: '0 auto', marginTop: '40px'}}>
                         <span class="sr-only">Loading...</span>
                     </div>,
-            array: []
+            array: [],
+            redirect: false
         }
     }
 
     render(){
+        if (this.state.redirect) {
+            return <Redirect push to="/"/>
+        }
         return(
             <div id="cuerpoCarri">
                 <h5 id="reportePer">Reporte de Persona 1</h5>
@@ -79,7 +84,6 @@ class Carro extends React.Component{
                     <p id="numeroPer" className="datosPer">Teléfono: {datos.phone} </p>
                     <p id="direccionPer" className="datosPer">Dirección: {datos.address} </p>
                     <p id="aportePer" className="datosPer">Total de aporte: ${this.state.aporte.toFixed(2)} </p>
-                    <p id="deudaPer" className="datosPer">Deuda: ${this.state.deuda.toFixed(2)} </p>
                     <p className="datosPer">Fecha de entrada: {datos.enrollmentDate}</p>
                     <p id="tiempoPer" className="datosPer">Tiempo como socio: {this.state.tiempo} meses</p>
                 </div>
@@ -197,6 +201,9 @@ class Carro extends React.Component{
     }
 
     componentDidMount(){
+        if (!window.localStorage.getItem('idMiembro')) {
+            this.setState({redirect: true});
+        }
         request
             .get('http://clubcptloja.com/api/members/' + window.localStorage.getItem('idMiembro'))
             .set({'Content-Type':'aplication/json'})
@@ -210,7 +217,6 @@ class Carro extends React.Component{
                     .set({'Content-Type':'aplication/json'})
                     .set({'Authorization': window.sessionStorage.getItem('token')})
                     .then(data => { 
-                        console.log(data.body);
                         const fehcaActual = new Date();
                         const ano = fehcaActual.getFullYear() - fechaEntrada.getFullYear();
                         let suma = 0;
@@ -227,12 +233,11 @@ class Carro extends React.Component{
                         this.setState({mesHoy: fehcaActual.getMonth()});
                         this.setState({anoHoy: fehcaActual.getFullYear()});
                         request
-                            .get('http://clubcptloja.com/api/payments/pending/' + window.localStorage.getItem('idMiembro'))
+                            .get('http://clubcptloja.com/api/payments/' + window.localStorage.getItem('idMiembro') + '/last')
                             .set({'Content-Type':'aplication/json'})
                             .set({'Authorization': window.sessionStorage.getItem('token')})
                             .then(add => {
                                 this.setState({pagosF: add.body.data});
-                                this.setState({deuda: (add.body.data.length) * 5});
                                 this.setState({funcion: this.datosPersona(res.body.data)});
                                 this.setState({pagosDone: data.body.data});
                                 document.getElementById('botonAno').innerHTML = this.state.pagosDone[this.state.anoLast].year;

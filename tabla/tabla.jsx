@@ -4,6 +4,7 @@ import { Container, Row, Col, Button } from 'reactstrap';
 import * as request from 'superagent';
 import {Link, BrowserRouter as Router, NavLink} from 'react-router-dom';
 import { Redirect } from 'react-router-dom';
+import exportFromJSON from 'export-from-json'
 
 class Tabla extends React.Component{
     constructor(props){
@@ -38,13 +39,16 @@ class Tabla extends React.Component{
                 </div>
                 <div id="bodif">
                     <div id="cuerpo" className="row justify-content-around">
-                        <div className="col-8">
+                        <div className="col-4">
                             <button type="button" class="btn btn-primary" id="dropEstado" data-toggle="dropdown" style={{backgroundColor: 'rgb(40, 167, 69)', display: 'block', margin: '0 auto', width: '100%', height: "40px", borderColor: 'rgb(40, 167, 69)'}}>Estado</button>
                             <div class="dropdown-menu dropItems" aria-labelledby="dropdownMenuButton">
                                 <a class="dropdown-item" name="Todos" onClick={this.estado.bind(this)}>Todos</a>
                                 <a class="dropdown-item" name="Pagado" onClick={this.estado.bind(this)}>Pagado</a> 
                                 <a class="dropdown-item" name="Pendiente" onClick={this.estado.bind(this)}>Pendiente</a> 
                             </div>
+                        </div>
+                        <div className="col-4">
+                        <button onClick={this.exportarExe.bind(this)} type="button" class="btn btn-primary" id="dropEstado" style={{backgroundColor: 'rgb(40, 167, 69)', display: 'block', margin: '0 auto', width: '100%', height: "40px", borderColor: 'rgb(40, 167, 69)'}}>Exportar</button>            
                         </div>
                     </div>
                     <div id="cuerpoTabla">
@@ -81,6 +85,13 @@ class Tabla extends React.Component{
         );
     }
 
+    exportarExe() {
+        const data = this.state.usuarios; 
+        const fileName = 'socios';  
+        const exportType = 'xls';
+        exportFromJSON({ data, fileName, exportType })   
+    }
+
     buscar(event) {
         let aux = [];
         this.state.buscar.map((datos, key) => {
@@ -89,6 +100,7 @@ class Tabla extends React.Component{
             }
         });
         this.setState({function: this.dibujarTabla(aux)});
+        this.setState({usuarios: aux});
     }
 
     estado (event) {
@@ -132,6 +144,7 @@ class Tabla extends React.Component{
     }
 
     pagos (event) {
+        console.log(event.target.lang);
         window.localStorage.setItem('idMiembro', event.target.lang);
     }
 
@@ -164,6 +177,7 @@ class Tabla extends React.Component{
                     .then(res => {
                         this.setState({miembros: res.body.data});
                         this.setState({function: this.dibujarTabla(res.body.data)});
+                        this.setState({usuarios: res.body.data});
                         let aux = [];
                         res.body.data.map((datos) => {
                             const text = datos.name + datos.lastname + datos.ci;
@@ -189,7 +203,7 @@ class Tabla extends React.Component{
                     <td>
                         <i class="fas fa-ellipsis-h icon2" data-toggle="dropdown"></i>
                         <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                            <NavLink to="/perfil" class="dropdown-item" lang={data.id} onClick={this.pagos.bind(this)}><i class="fas fa-bookmark icon3"></i>Pagos</NavLink>
+                            <NavLink to="/perfil" class="dropdown-item" lang={data.id} onClick={this.pagos.bind(this)}><i lang={data.id} onClick={this.pagos.bind(this)} class="fas fa-bookmark icon3"></i>Pagos</NavLink>
                             <a class="dropdown-item" lang={data.id} onClick={this.obtenerMiembro.bind(this)}><i class="fas fa-edit icon3"></i>Editar</a>
                             <a class="dropdown-item" data-toggle="modal" data-target="#eliminar" lang={data.id} onClick={this.delate.bind(this)}><i class="fas fa-times icon3"></i>Eliminar</a>
                         </div>
@@ -208,6 +222,7 @@ class Tabla extends React.Component{
          .then(res => {
              this.setState({miembros: res.body.data});
              this.setState({function: this.dibujarTabla(res.body.data)});
+             this.setState({usuarios: res.body.data});
              let aux = [];
              res.body.data.map((datos) => {
                 const text = datos.name + datos.lastname + datos.ci;
